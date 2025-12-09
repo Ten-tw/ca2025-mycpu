@@ -25,6 +25,42 @@ class PipelineProgramTest extends AnyFlatSpec with ChiselScalatestTester {
   for (cfg <- PipelineConfigs.All) {
     behavior.of(cfg.name)
 
+    it should "solve Tower of Hanoi (3 Disks) correctly" in {
+      runProgram("tower_of_hanoi.asmbin", cfg) { c =>
+        for (i <- 1 to 50) {
+          c.clock.step(1000)
+          c.io.mem_debug_read_address.poke((i * 4).U)
+        }
+        c.io.mem_debug_read_address.poke(4.U)
+        c.clock.step()
+        c.io.mem_debug_read_data.expect(1.U, "Last Disk Moved Index Should be Disk 1")
+
+        c.io.mem_debug_read_address.poke(8.U)
+        c.clock.step()
+        c.io.mem_debug_read_data.expect(65.U, "Last Move Source Peg must be 'A' (ASCII 65)")
+
+        c.io.mem_debug_read_address.poke(12.U)
+        c.clock.step()
+        c.io.mem_debug_read_data.expect(67.U, "Last Move Destination Peg must be 'C' (ASCII 67)")
+
+        c.io.mem_debug_read_address.poke(16.U)
+        c.clock.step()
+        c.io.mem_debug_read_data.expect(7.U, "Total minimal moves (2^3 - 1) must equal 7")
+
+        c.io.mem_debug_read_address.poke(20.U)
+        c.clock.step()
+        c.io.mem_debug_read_data.expect(67.U, "Final Peg for Disk 1 must be 'C' (ASCII 67)")
+
+        c.io.mem_debug_read_address.poke(24.U)
+        c.clock.step()
+        c.io.mem_debug_read_data.expect(67.U, "Final Peg for Disk 2 must be 'C' (ASCII 67)")
+
+        c.io.mem_debug_read_address.poke(28.U)
+        c.clock.step()
+        c.io.mem_debug_read_data.expect(67.U, "Final Peg for Disk 3 must be 'C' (ASCII 67)")
+      }
+    }
+    
     it should "calculate recursively fibonacci(10)" in {
       runProgram("fibonacci.asmbin", cfg) { c =>
         for (i <- 1 to 50) {
