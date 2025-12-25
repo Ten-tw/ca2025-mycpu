@@ -139,7 +139,7 @@ display_move:
     sw      s0, 16(zero) # s0: Move Counter (Total Steps Executed)
 
     # BLANK 28-29: Increment counter and loop
-    addi    s0, s0, 1 #s0 =runtime
+    addi    s0, s0, 1
     jal     x0, game_loop
 
 finish_game:
