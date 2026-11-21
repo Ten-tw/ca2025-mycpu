@@ -55,6 +55,7 @@ test_run_dir/
 
 ### RISCOF compliance test results
 */results/
+/riscof_venv/
 
 ### Auto-generated compliance test files (created by RISCOF during test runs)
 **/src/test/scala/riscv/compliance/ComplianceTest.scala

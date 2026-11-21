@@ -118,23 +118,28 @@ tests/
 
 ## Prerequisites
 
-1. Install RISCOF:
-   ```shell
-   pip install riscof
-   ```
+The compliance workflow was tested on Linux with JDK 11.0.29, sbt 1.10.7,
+Python 3.12.3, RISCOF 1.25.3, Verilator 5.020, and xPack GNU RISC-V Embedded
+GCC 14.2.0 (`riscv-none-elf-`). Install Git, Bash, GNU Make, and a native
+C/C++ toolchain to build and run the simulators.
 
-2. Ensure RISC-V toolchain is in PATH:
-   ```shell
-   riscv32-unknown-elf-gcc --version
-   ```
+From the repository root, create the RISCOF environment and put the
+RISC-V toolchain's `bin` directory on `PATH`:
 
-3. Ensure sbt and Chisel dependencies are available
+```bash
+python3 -m venv riscof_venv
+source riscof_venv/bin/activate
+python -m pip install riscof==1.25.3
+export PATH="/path/to/riscv-toolchain/bin:$PATH"
+make -C 3-pipeline compliance
+```
 
 ## First-Time Setup
 
-The test infrastructure depends on two external repositories that provide the test suite and reference implementation:
-- `riscv-arch-test` provides the official RISC-V compliance test suite
-- `rv32emu` serves as the reference implementation for signature comparison
+`setup.sh` downloads two pinned GitHub revisions:
+
+- `riscv-arch-test` at `281d71ef3d61e32111217b20305ea3ef9b1582e2` provides the RISCOF test suite.
+- `rv32emu` at `035849042c3468fe9e7893d25745ea26aa4778ec` serves as the reference implementation for signature comparison.
 
 Automated Setup (Recommended):
 
@@ -153,19 +158,9 @@ cd tests
 ./setup.sh
 ```
 
-The setup script will:
-- Clone `riscv-arch-test` (official RISC-V test suite)
-- Clone `rv32emu` (reference model)
-- Verify test suite structure
-- Report status with colored output
-
-Manual Setup (Alternative):
-
-```shell
-cd tests
-git clone --depth=1 https://github.com/riscv-non-isa/riscv-arch-test
-git clone --depth=1 https://github.com/sysprog21/rv32emu
-```
+If either dependency directory already contains a different revision, move
+that directory aside and rerun setup. The script reports the directory and
+expected revision.
 
 ## Usage
 
@@ -334,7 +329,7 @@ Supported instruction categories:
 
 1. riscof not found
    ```shell
-   pip install riscof
+   python -m pip install riscof==1.25.3
    ```
 
 2. RISC-V toolchain not found

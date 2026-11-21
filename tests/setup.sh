@@ -7,7 +7,11 @@ set -euo pipefail
 
 # Repository URLs
 ARCH_TEST_REPO="https://github.com/riscv-non-isa/riscv-arch-test"
+# RISCOF expects the legacy riscv-test-suite layout.
+ARCH_TEST_REV="281d71ef3d61e32111217b20305ea3ef9b1582e2"
 RV32EMU_REPO="https://github.com/sysprog21/rv32emu"
+# This revision supports the ENABLE_ARCH_TEST build and signature interface.
+RV32EMU_REV="035849042c3468fe9e7893d25745ea26aa4778ec"
 
 # Color output
 RED='\033[0;31m'
@@ -27,31 +31,32 @@ if ! command -v git &> /dev/null; then
     exit 1
 fi
 
-# Clone riscv-arch-test if not present
-if [ -d "riscv-arch-test" ]; then
-    echo -e "${GREEN}✓${NC} riscv-arch-test already present"
-else
-    echo -e "${YELLOW}→${NC} Cloning riscv-arch-test (official RISC-V compliance tests)..."
-    if git clone --depth=1 "$ARCH_TEST_REPO"; then
-        echo -e "${GREEN}✓${NC} riscv-arch-test cloned successfully"
-    else
-        echo -e "${RED}✗${NC} Failed to clone riscv-arch-test"
-        exit 1
-    fi
-fi
+checkout_revision() (
+    local directory=$1 repository=$2 revision=$3 checkout
 
-# Clone rv32emu if not present
-if [ -d "rv32emu" ]; then
-    echo -e "${GREEN}✓${NC} rv32emu already present"
-else
-    echo -e "${YELLOW}→${NC} Cloning rv32emu (reference model)..."
-    if git clone --depth=1 "$RV32EMU_REPO"; then
-        echo -e "${GREEN}✓${NC} rv32emu cloned successfully"
-    else
-        echo -e "${RED}✗${NC} Failed to clone rv32emu"
-        exit 1
+    if [ -d "$directory" ]; then
+        if [ "$(git -C "$directory" rev-parse --verify HEAD 2>/dev/null)" != "$revision" ]; then
+            echo "Existing $directory checkout differs from $revision."
+            echo "Move the existing directory aside and run ./setup.sh again."
+            exit 1
+        fi
+        echo -e "${GREEN}✓${NC} $directory already at $revision"
+        return
     fi
-fi
+
+    echo -e "${YELLOW}→${NC} Downloading $directory at $revision..."
+    checkout=$(mktemp -d ".$directory.XXXXXX")
+    trap 'rm -rf -- "$checkout"' EXIT
+    git init -q "$checkout"
+    git -C "$checkout" remote add origin "$repository"
+    git -C "$checkout" fetch --depth=1 origin "$revision"
+    git -C "$checkout" checkout --detach FETCH_HEAD
+    mv "$checkout" "$directory"
+    trap - EXIT
+)
+
+checkout_revision riscv-arch-test "$ARCH_TEST_REPO" "$ARCH_TEST_REV"
+checkout_revision rv32emu "$RV32EMU_REPO" "$RV32EMU_REV"
 
 # Verify test suite structure
 echo ""

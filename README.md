@@ -100,18 +100,13 @@ The MyCPU shell provides interactive debugging with memory inspection, CSR acces
 ### Dependencies
 
 **Core Requirements:**
-- **SBT** 1.9.7+ - Scala build tool
+- **sbt** 1.10.7 with JDK 11 - Scala build tool
 - **Chisel** 3.6.1 with legacy FIRRTL compiler 1.6.0
 - **Verilator** 5.042+ - HDL simulator for Verilog
 - **RISC-V Toolchain** (optional) - For assembling C/asm test programs
 
-**For Compliance Testing:**
-- **RISCOF** 1.25.3+ - RISC-V Architectural Test Framework
-  ```bash
-  pip install riscof
-  # Verify installation
-  riscof --version
-  ```
+For RISCOF 1.25.3, the tested toolchain versions, and first-time setup, see the
+[compliance testing prerequisites](tests/README.md#prerequisites).
 
 **Dependency Validation:**
 ```bash
@@ -132,9 +127,8 @@ The toolchain selection enables builds on systems lacking pre-built CIRCT binari
 ### Repository-wide targets (from top-level directory)
 
 ```shell
-make help          # Display all available build targets and usage
 make check-deps    # Validate all dependencies (toolchain, verilator, riscof)
-make test-all      # Run ChiselTest suite for all four projects
+sbt test           # Run the ChiselTest suites
 make clean         # Clean build artifacts from all projects
 make distclean     # Deep clean: remove RISCOF results and all generated files
 ```

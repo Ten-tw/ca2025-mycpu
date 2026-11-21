@@ -24,7 +24,7 @@ check_cross_tools() {
     local prefix=$1
     if command -v "${prefix}gcc" &> /dev/null && \
        command -v "${prefix}cpp" &> /dev/null && \
-       echo | "${prefix}cpp" -dM - 2>/dev/null | grep -q __riscv; then
+       "${prefix}cpp" -dM - </dev/null 2>/dev/null | grep __riscv > /dev/null; then
         return 0
     fi
     return 1
@@ -86,36 +86,24 @@ if ! command -v riscof &> /dev/null; then
     exit 1
 fi
 
-# Check for required test repositories and run setup if needed
-if [[ ! -d "riscv-arch-test" ]] || [[ ! -d "rv32emu" ]]; then
-    echo "Required test repositories not found"
-    echo "Running automated setup..."
-    echo ""
-    if [[ -x "./setup.sh" ]]; then
-        ./setup.sh
-    else
-        echo "Error: setup.sh not found or not executable"
-        echo "Please run: ./setup.sh"
-        exit 1
-    fi
-    echo ""
-fi
+# Fetch missing dependencies and verify the revisions of existing checkouts.
+./setup.sh
 
 # Build rv32emu reference model if not already built
 if [[ ! -f "rv32emu/build/rv32emu" ]]; then
     echo "Building rv32emu reference model..."
     echo "This is a one-time setup that may take 1-2 minutes..."
     echo ""
-    pushd rv32emu > /dev/null
-    if make ENABLE_ARCH_TEST=1 ENABLE_FULL4G=1; then
+    # The RISCOF reference only needs RV32I and Zicsr. The build does not
+    # use upstream prebuilt test artifacts, so skip their release discovery.
+    if make -C rv32emu ENABLE_ARCH_TEST=1 ENABLE_FULL4G=1 \
+        ENABLE_EXT_F=0 ENABLE_SDL=0 ENABLE_SDL_MIXER=0 LATEST_RELEASE=dummy; then
         echo "✅ rv32emu built successfully"
     else
         echo "❌ Failed to build rv32emu"
-        echo "Please check build dependencies and try building manually:"
-        echo "  cd rv32emu && make ENABLE_ARCH_TEST=1 ENABLE_FULL4G=1"
+        echo "Check the build errors above and rerun this script."
         exit 1
     fi
-    popd > /dev/null
     echo ""
 fi
 
